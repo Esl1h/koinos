@@ -142,6 +142,12 @@ fn download_with_fallback(url string) !string {
 }
 
 pub fn install_fonts(fonts FontsConfig) ! {
+	// Skip if no fonts configured
+	if fonts.hack_url.len == 0 && fonts.jetbrains_url.len == 0 {
+		println('\n⚠ No fonts configured, skipping...')
+		return
+	}
+
 	println('\n=== Installing Fonts ===\n')
 
 	home := os.home_dir()
@@ -155,21 +161,36 @@ pub fn install_fonts(fonts FontsConfig) ! {
 		println('✓ Created ${local_fonts_dir}')
 	}
 
-	// Download fonts
-	println('Downloading Hack Nerd Font...')
-	hack_result := os.execute('wget -c ${fonts.hack_url} -P ${local_fonts_dir}')
-	if hack_result.exit_code != 0 {
-		println('⚠ Failed to download Hack font')
-	} else {
-		println('✓ Hack font downloaded')
+	mut downloaded := 0
+
+	// Download Hack font if configured
+	if fonts.hack_url.len > 0 {
+		println('Downloading Hack Nerd Font...')
+		hack_result := os.execute('wget -c ${fonts.hack_url} -P ${local_fonts_dir}')
+		if hack_result.exit_code != 0 {
+			println('⚠ Failed to download Hack font')
+		} else {
+			println('✓ Hack font downloaded')
+			downloaded++
+		}
 	}
 
-	println('Downloading JetBrains Mono...')
-	jetbrains_result := os.execute('wget -c ${fonts.jetbrains_url} -P ${local_fonts_dir}')
-	if jetbrains_result.exit_code != 0 {
-		println('⚠ Failed to download JetBrains Mono font')
-	} else {
-		println('✓ JetBrains Mono font downloaded')
+	// Download JetBrains font if configured
+	if fonts.jetbrains_url.len > 0 {
+		println('Downloading JetBrains Mono...')
+		jetbrains_result := os.execute('wget -c ${fonts.jetbrains_url} -P ${local_fonts_dir}')
+		if jetbrains_result.exit_code != 0 {
+			println('⚠ Failed to download JetBrains Mono font')
+		} else {
+			println('✓ JetBrains Mono font downloaded')
+			downloaded++
+		}
+	}
+
+	// Skip if no fonts were downloaded
+	if downloaded == 0 {
+		println('⚠ No fonts were downloaded')
+		return
 	}
 
 	// Change to fonts directory
@@ -193,6 +214,14 @@ pub fn install_fonts(fonts FontsConfig) ! {
 }
 
 pub fn setup_zsh_plugins(zsh ZshConfig) ! {
+	// Skip if no plugins configured
+	if zsh.syntax_highlighting_repo.len == 0 &&
+	   zsh.autosuggestions_repo.len == 0 &&
+	   zsh.powerlevel10k_repo.len == 0 {
+		println('\n⚠ No zsh plugins configured, skipping...')
+		return
+	}
+
 	println('\n=== Setting up Zsh Plugins ===\n')
 
 	home := os.home_dir()
@@ -211,45 +240,56 @@ pub fn setup_zsh_plugins(zsh ZshConfig) ! {
 		println('⚠ Failed to create completions directory')
 	}
 
-	// Install syntax highlighting
-	println('[1/3] Installing zsh-syntax-highlighting...')
-	plugins_dir := ohmyzsh_custom + '/plugins/zsh-syntax-highlighting'
-	if os.exists(plugins_dir) {
-		println('  Already exists, skipping')
-	} else {
-		result := os.system('git clone --depth=1 ${zsh.syntax_highlighting_repo} ${plugins_dir}')
-		if result == 0 {
-			println('  ✓ zsh-syntax-highlighting installed')
+	mut installed := 0
+
+	// Install syntax highlighting if configured
+	if zsh.syntax_highlighting_repo.len > 0 {
+		println('[1/3] Installing zsh-syntax-highlighting...')
+		plugins_dir := ohmyzsh_custom + '/plugins/zsh-syntax-highlighting'
+		if os.exists(plugins_dir) {
+			println('  Already exists, skipping')
 		} else {
-			println('  ✗ Failed to install zsh-syntax-highlighting')
+			result := os.system('git clone --depth=1 ${zsh.syntax_highlighting_repo} ${plugins_dir}')
+			if result == 0 {
+				println('  ✓ zsh-syntax-highlighting installed')
+				installed++
+			} else {
+				println('  ✗ Failed to install zsh-syntax-highlighting')
+			}
 		}
 	}
 
-	// Install autosuggestions
-	println('[2/3] Installing zsh-autosuggestions...')
-	autosuggestions_dir := ohmyzsh_custom + '/plugins/zsh-autosuggestions'
-	if os.exists(autosuggestions_dir) {
-		println('  Already exists, skipping')
-	} else {
-		result := os.system('git clone --depth=1 ${zsh.autosuggestions_repo} ${autosuggestions_dir}')
-		if result == 0 {
-			println('  ✓ zsh-autosuggestions installed')
+	// Install autosuggestions if configured
+	if zsh.autosuggestions_repo.len > 0 {
+		println('[2/3] Installing zsh-autosuggestions...')
+		autosuggestions_dir := ohmyzsh_custom + '/plugins/zsh-autosuggestions'
+		if os.exists(autosuggestions_dir) {
+			println('  Already exists, skipping')
 		} else {
-			println('  ✗ Failed to install zsh-autosuggestions')
+			result := os.system('git clone --depth=1 ${zsh.autosuggestions_repo} ${autosuggestions_dir}')
+			if result == 0 {
+				println('  ✓ zsh-autosuggestions installed')
+				installed++
+			} else {
+				println('  ✗ Failed to install zsh-autosuggestions')
+			}
 		}
 	}
 
-	// Install powerlevel10k theme
-	println('[3/3] Installing Powerlevel10k theme...')
-	p10k_dir := ohmyzsh_custom + '/themes/powerlevel10k'
-	if os.exists(p10k_dir) {
-		println('  Already exists, skipping')
-	} else {
-		result := os.system('git clone --depth=1 ${zsh.powerlevel10k_repo} ${p10k_dir}')
-		if result == 0 {
-			println('  ✓ Powerlevel10k installed')
+	// Install powerlevel10k if configured
+	if zsh.powerlevel10k_repo.len > 0 {
+		println('[3/3] Installing Powerlevel10k theme...')
+		p10k_dir := ohmyzsh_custom + '/themes/powerlevel10k'
+		if os.exists(p10k_dir) {
+			println('  Already exists, skipping')
 		} else {
-			println('  ✗ Failed to install Powerlevel10k')
+			result := os.system('git clone --depth=1 ${zsh.powerlevel10k_repo} ${p10k_dir}')
+			if result == 0 {
+				println('  ✓ Powerlevel10k installed')
+				installed++
+			} else {
+				println('  ✗ Failed to install Powerlevel10k')
+			}
 		}
 	}
 
@@ -257,73 +297,111 @@ pub fn setup_zsh_plugins(zsh ZshConfig) ! {
 }
 
 pub fn install_dotfiles(dotfiles DotfilesConfig) ! {
+	// Skip if no dotfiles configured
+	if dotfiles.sysctl_url.len == 0 &&
+	   dotfiles.ssh_config_url.len == 0 &&
+	   dotfiles.vimrc_url.len == 0 &&
+	   dotfiles.vim_plug_url.len == 0 &&
+	   dotfiles.zshrc_url.len == 0 {
+		println('\n⚠ No dotfiles configured, skipping...')
+		return
+	}
+
 	println('\n=== Installing Dotfiles ===\n')
 
 	home := os.home_dir()
+	mut installed := 0
 
-	// Install .zshrc
-	println('[1/5] Installing .zshrc...')
-	zshrc_path := home + '/.zshrc'
+	// Install .zshrc if configured
+	if dotfiles.zshrc_url.len > 0 {
+		println('[1/5] Installing .zshrc...')
+		zshrc_path := home + '/.zshrc'
 
-	// Backup existing .zshrc
-	if os.exists(zshrc_path) {
-		backup_path := zshrc_path + '.backup'
-		os.mv(zshrc_path, backup_path) or {
-			println('  ⚠ Could not backup existing .zshrc')
+		// Backup existing .zshrc
+		if os.exists(zshrc_path) {
+			backup_path := zshrc_path + '.backup'
+			os.mv(zshrc_path, backup_path) or {
+				println('  ⚠ Could not backup existing .zshrc')
+			}
+			println('  Backed up existing .zshrc to .zshrc.backup')
 		}
-		println('  Backed up existing .zshrc to .zshrc.backup')
+
+		// Download .zshrc with fallback
+		zshrc_content := download_with_fallback(dotfiles.zshrc_url) or {
+			println('  ✗ Failed to download .zshrc')
+			''
+		}
+
+		if zshrc_content.len > 0 {
+			// Add oh-my-zsh configuration
+			final_content := zshrc_content + '\nexport ZSH="${home}/.oh-my-zsh"\nsource \$ZSH/oh-my-zsh.sh\n'
+
+			os.write_file(zshrc_path, final_content) or {
+				println('  ✗ Failed to write .zshrc')
+				return error('Failed to write .zshrc')
+			}
+			println('  ✓ .zshrc installed')
+			installed++
+		}
+	} else {
+		println('[1/5] Skipping .zshrc (not configured)')
 	}
 
-	// Download .zshrc with fallback
-	zshrc_content := download_with_fallback(dotfiles.zshrc_url) or {
-		println('  ✗ Failed to download .zshrc')
-		return error('Failed to download .zshrc')
+	// Install vim configuration if configured
+	if dotfiles.vimrc_url.len > 0 || dotfiles.vim_plug_url.len > 0 {
+		println('[2/5] Installing vim configuration...')
+		vim_autoload := home + '/.vim/autoload'
+		os.mkdir_all(vim_autoload) or {
+			println('  ⚠ Failed to create vim directories')
+		}
+
+		if dotfiles.vim_plug_url.len > 0 {
+			os.system('curl -fLo ${vim_autoload}/plug.vim --create-dirs ${dotfiles.vim_plug_url}')
+		}
+		if dotfiles.vimrc_url.len > 0 {
+			os.system('curl -fsSL ${dotfiles.vimrc_url} > ${home}/.vimrc')
+		}
+		println('  ✓ Vim configuration installed')
+		installed++
+	} else {
+		println('[2/5] Skipping vim configuration (not configured)')
 	}
 
-	// Add oh-my-zsh configuration
-	final_content := zshrc_content + '\nexport ZSH="${home}/.oh-my-zsh"\nsource \$ZSH/oh-my-zsh.sh\n'
+	// Install sysctl configuration if configured
+	if dotfiles.sysctl_url.len > 0 {
+		println('[3/5] Installing sysctl configuration...')
+		sysctl_content := download_with_fallback(dotfiles.sysctl_url) or {
+			println('  ✗ Failed to download sysctl.conf')
+			''
+		}
 
-	os.write_file(zshrc_path, final_content) or {
-		return error('Failed to write .zshrc')
-	}
-	println('  ✓ .zshrc installed')
-
-	// Install vim configuration
-	println('[2/5] Installing vim configuration...')
-	vim_autoload := home + '/.vim/autoload'
-	os.mkdir_all(vim_autoload) or {
-		println('  ⚠ Failed to create vim directories')
-	}
-
-	os.system('curl -fLo ${vim_autoload}/plug.vim --create-dirs ${dotfiles.vim_plug_url}')
-	os.system('curl -fsSL ${dotfiles.vimrc_url} > ${home}/.vimrc')
-	println('  ✓ Vim configuration installed')
-
-	// Install sysctl configuration
-	println('[3/5] Installing sysctl configuration...')
-	sysctl_content := download_with_fallback(dotfiles.sysctl_url) or {
-		println('  ✗ Failed to download sysctl.conf')
-		''
+		if sysctl_content.len > 0 {
+			os.execute('echo "${sysctl_content}" | sudo tee -a /etc/sysctl.conf > /dev/null')
+			os.system('sudo sysctl -p')
+			println('  ✓ sysctl configuration applied')
+			installed++
+		}
+	} else {
+		println('[3/5] Skipping sysctl configuration (not configured)')
 	}
 
-	if sysctl_content.len > 0 {
-		os.execute('echo "${sysctl_content}" | sudo tee -a /etc/sysctl.conf > /dev/null')
-		os.system('sudo sysctl -p')
-		println('  ✓ sysctl configuration applied')
-	}
+	// Install SSH configuration if configured
+	if dotfiles.ssh_config_url.len > 0 {
+		println('[4/5] Installing SSH configuration...')
+		ssh_content := download_with_fallback(dotfiles.ssh_config_url) or {
+			println('  ✗ Failed to download ssh_config')
+			''
+		}
 
-	// Install SSH configuration
-	println('[4/5] Installing SSH configuration...')
-	ssh_content := download_with_fallback(dotfiles.ssh_config_url) or {
-		println('  ✗ Failed to download ssh_config')
-		''
-	}
-
-	if ssh_content.len > 0 {
-		os.execute('echo "${ssh_content}" | sudo tee /etc/ssh/ssh_config > /dev/null')
-		os.system('sudo systemctl enable sshd 2>/dev/null')
-		os.system('sudo systemctl start sshd 2>/dev/null')
-		println('  ✓ SSH configuration applied')
+		if ssh_content.len > 0 {
+			os.execute('echo "${ssh_content}" | sudo tee /etc/ssh/ssh_config > /dev/null')
+			os.system('sudo systemctl enable sshd 2>/dev/null')
+			os.system('sudo systemctl start sshd 2>/dev/null')
+			println('  ✓ SSH configuration applied')
+			installed++
+		}
+	} else {
+		println('[4/5] Skipping SSH configuration (not configured)')
 	}
 
 	// Configure tmpfs for /tmp, /var/tmp, /var/log

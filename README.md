@@ -306,7 +306,93 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 - **Issues**: [GitHub Issues](https://github.com/your-repo/koinos/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/your-repo/koinos/discussions)
+- **Troubleshooting**: See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues and solutions
 
 ---
 
 **Koinós** — One tool for all Linux distributions. Configure once, deploy anywhere.
+
+## 📚 Usage Examples
+
+### Example 1: Minimal Setup (Git + Vim only)
+
+```toml
+[system]
+basic_packages = ["git", "vim"]
+
+[[configs.custom_dotfiles]]
+url = "https://raw.githubusercontent.com/Esl1h/dotfiles/main/.vimrc"
+destination = "~/.vimrc"
+needs_sudo = false
+```
+
+### Example 2: Full Development Environment
+
+```toml
+[system]
+basic_packages = ["git", "vim", "tmux", "zsh", "curl", "wget"]
+
+[scripts.apps]
+ohmyzsh = 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
+
+[configs.fonts]
+hack_url = "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Hack.zip"
+
+[configs.zsh]
+syntax_highlighting_repo = "https://github.com/zsh-users/zsh-syntax-highlighting.git"
+autosuggestions_repo = "https://github.com/zsh-users/zsh-autosuggestions"
+
+[[configs.custom_dotfiles]]
+url = "https://raw.githubusercontent.com/Esl1h/dotfiles/main/.tmux.conf"
+destination = "~/.tmux.conf"
+needs_sudo = false
+
+[[configs.custom_dotfiles]]
+url = "https://raw.githubusercontent.com/Esl1h/dotfiles/main/.gitconfig"
+destination = "~/.gitconfig"
+needs_sudo = false
+```
+
+### Example 3: System Administrator Setup
+
+```toml
+[system]
+basic_packages = ["vim", "htop", "tmux", "openssh-server"]
+
+[[configs.custom_dotfiles]]
+url = "https://raw.githubusercontent.com/Esl1h/dotfiles/main/etc/sysctl.conf"
+destination = "/etc/sysctl.conf"
+needs_sudo = true
+
+[[configs.custom_dotfiles]]
+url = "https://raw.githubusercontent.com/Esl1h/dotfiles/main/etc/ssh/sshd_config"
+destination = "/etc/ssh/sshd_config"
+needs_sudo = true
+
+[[configs.custom_dotfiles]]
+url = "https://raw.githubusercontent.com/Esl1h/dotfiles/main/.vimrc"
+destination = "/root/.vimrc"
+needs_sudo = true
+```
+
+## 🔄 Multi-Mirror Support
+
+All dotfiles are downloaded with **automatic fallback**:
+
+1. **Primary**: GitHub (`raw.githubusercontent.com`)
+2. **Fallback 1**: GitLab (`gitlab.com/-/raw/`)
+3. **Fallback 2**: Codeberg (`codeberg.org/raw/`)
+
+This ensures your setup works even if one service is down!
+
+**Example:**
+```
+Trying: https://raw.githubusercontent.com/
+✓ Downloaded from https://raw.githubusercontent.com/
+
+# If GitHub fails:
+Trying: https://raw.githubusercontent.com/
+  (failed)
+Trying: https://gitlab.com/
+✓ Downloaded from https://gitlab.com/
+```

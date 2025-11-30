@@ -72,10 +72,30 @@ fn load_config() !Config {
 	for item in custom_dotfiles_toml {
 		item_map := item.as_map()
 		custom_dotfiles << configs.CustomDotfile{
-			url: item_map['url'].string()
-			destination: item_map['destination'].string()
-			needs_sudo: item_map['needs_sudo'].bool()
+			url: item_map['url'] or { continue }.string()
+			destination: item_map['destination'] or { continue }.string()
+			needs_sudo: item_map['needs_sudo'] or { continue }.bool()
 		}
+	}
+
+	// Safe parsing with fallback to empty strings
+	fonts_config := configs.FontsConfig{
+		hack_url: doc.value('configs.fonts.hack_url').default_to('').string()
+		jetbrains_url: doc.value('configs.fonts.jetbrains_url').default_to('').string()
+	}
+
+	zsh_config := configs.ZshConfig{
+		syntax_highlighting_repo: doc.value('configs.zsh.syntax_highlighting_repo').default_to('').string()
+		autosuggestions_repo: doc.value('configs.zsh.autosuggestions_repo').default_to('').string()
+		powerlevel10k_repo: doc.value('configs.zsh.powerlevel10k_repo').default_to('').string()
+	}
+
+	dotfiles_config := configs.DotfilesConfig{
+		sysctl_url: doc.value('configs.dotfiles.sysctl_url').default_to('').string()
+		ssh_config_url: doc.value('configs.dotfiles.ssh_config_url').default_to('').string()
+		vimrc_url: doc.value('configs.dotfiles.vimrc_url').default_to('').string()
+		vim_plug_url: doc.value('configs.dotfiles.vim_plug_url').default_to('').string()
+		zshrc_url: doc.value('configs.dotfiles.zshrc_url').default_to('').string()
 	}
 
 	config := Config{
@@ -90,22 +110,9 @@ fn load_config() !Config {
 			apps: apps
 		}
 		configs: ConfigsSection{
-			fonts: configs.FontsConfig{
-				hack_url: doc.value('configs.fonts.hack_url').string()
-				jetbrains_url: doc.value('configs.fonts.jetbrains_url').string()
-			}
-			zsh: configs.ZshConfig{
-				syntax_highlighting_repo: doc.value('configs.zsh.syntax_highlighting_repo').string()
-				autosuggestions_repo: doc.value('configs.zsh.autosuggestions_repo').string()
-				powerlevel10k_repo: doc.value('configs.zsh.powerlevel10k_repo').string()
-			}
-			dotfiles: configs.DotfilesConfig{
-				sysctl_url: doc.value('configs.dotfiles.sysctl_url').string()
-				ssh_config_url: doc.value('configs.dotfiles.ssh_config_url').string()
-				vimrc_url: doc.value('configs.dotfiles.vimrc_url').string()
-				vim_plug_url: doc.value('configs.dotfiles.vim_plug_url').string()
-				zshrc_url: doc.value('configs.dotfiles.zshrc_url').string()
-			}
+			fonts: fonts_config
+			zsh: zsh_config
+			dotfiles: dotfiles_config
 			custom_dotfiles: custom_dotfiles
 		}
 	}
@@ -128,6 +135,16 @@ fn main() {
 		return
 	}
 
+	println('\n=== Configuration Loaded ===')
+	println('System packages: ${config.system.basic_packages.len}')
+	println('Flatpak apps: ${config.flatpak.packages.len}')
+	println('Script apps: ${config.scripts.apps.len}')
+	println('Fonts URLs configured: ${config.configs.fonts.hack_url.len > 0 || config.configs.fonts.jetbrains_url.len > 0}')
+	println('Zsh repos configured: ${config.configs.zsh.syntax_highlighting_repo.len > 0}')
+	println('Dotfiles URLs configured: ${config.configs.dotfiles.vimrc_url.len > 0 || config.configs.dotfiles.zshrc_url.len > 0}')
+	println('Custom dotfiles: ${config.configs.custom_dotfiles.len}')
+	println('============================\n')
+
 	println('Package Manager: ${package_manager}')
 	println('Basic packages to install: ${config.system.basic_packages.len}')
 	for pkg in config.system.basic_packages {
@@ -139,8 +156,8 @@ fn main() {
 
 	// Install basic packages
 	installer.install_packages(package_manager, config.system.basic_packages) or {
-		eprintln('\nError: ${err}')
-		return
+		eprintln('\nWarning: ${err}')
+		eprintln('Continuing with remaining installations...')
 	}
 
 	// Setup Flatpak repository
@@ -151,40 +168,90 @@ fn main() {
 
 	// Install Flatpak packages
 	flatpak.install_packages(config.flatpak.packages) or {
-		eprintln('\nError: ${err}')
-		return
+		eprintln('\nWarning: ${err}')
+		eprintln('Continuing with remaining installations...')
+		// Don't return - continue!
 	}
 
 	// Install script-based applications
 	scripts.install_from_scripts(config.scripts.apps) or {
-		eprintln('\nError: ${err}')
-		return
+		eprintln('\nWarning: ${err}')
+		eprintln('Continuing with remaining installations...')
+		// Don't return - continue!
 	}
 
+	println('\n========================================')
+	println('Scripts completed - starting configs...')
+	println('========================================')
+
 	// Install fonts
-	configs.install_fonts(config.configs.fonts) or {
-		eprintln('\nError: ${err}')
-		// Continue even if fonts fail
+	println('\n=== [1/4] FONTS MODULE ===')
+	println('--- Checking fonts configuration ---')
+	println('Hack URL: ${config.configs.fonts.hack_url}')
+	println('JetBrains URL: ${config.configs.fonts.jetbrains_url}')
+
+	if config.configs.fonts.hack_url.len > 0 || config.configs.fonts.jetbrains_url.len > 0 {
+		println('Fonts configured, calling install_fonts()...')
+		configs.install_fonts(config.configs.fonts) or {
+			eprintln('\nWarning: Fonts failed - ${err}')
+			// Continue even if fonts fail
+		}
+	} else {
+		println('⚠ No fonts configured in config.toml, skipping fonts installation')
 	}
 
 	// Setup zsh plugins
-	configs.setup_zsh_plugins(config.configs.zsh) or {
-		eprintln('\nError: ${err}')
-		// Continue even if zsh plugins fail
+	println('\n=== [2/4] ZSH PLUGINS MODULE ===')
+	println('--- Checking zsh configuration ---')
+	println('Syntax highlighting: ${config.configs.zsh.syntax_highlighting_repo}')
+	println('Autosuggestions: ${config.configs.zsh.autosuggestions_repo}')
+	println('Powerlevel10k: ${config.configs.zsh.powerlevel10k_repo}')
+
+	if config.configs.zsh.syntax_highlighting_repo.len > 0 ||
+	   config.configs.zsh.autosuggestions_repo.len > 0 ||
+	   config.configs.zsh.powerlevel10k_repo.len > 0 {
+		println('Zsh plugins configured, calling setup_zsh_plugins()...')
+		configs.setup_zsh_plugins(config.configs.zsh) or {
+			eprintln('\nWarning: Zsh plugins failed - ${err}')
+			// Continue even if zsh plugins fail
+		}
+	} else {
+		println('⚠ No zsh plugins configured in config.toml, skipping zsh setup')
 	}
 
 	// Install dotfiles
-	configs.install_dotfiles(config.configs.dotfiles) or {
-		eprintln('\nError: ${err}')
-		// Continue even if dotfiles fail
+	println('\n=== [3/4] DOTFILES MODULE ===')
+	println('--- Checking dotfiles configuration ---')
+	println('Sysctl URL: ${config.configs.dotfiles.sysctl_url}')
+	println('SSH config URL: ${config.configs.dotfiles.ssh_config_url}')
+	println('Vimrc URL: ${config.configs.dotfiles.vimrc_url}')
+	println('Vim plug URL: ${config.configs.dotfiles.vim_plug_url}')
+	println('Zshrc URL: ${config.configs.dotfiles.zshrc_url}')
+
+	if config.configs.dotfiles.sysctl_url.len > 0 ||
+	   config.configs.dotfiles.ssh_config_url.len > 0 ||
+	   config.configs.dotfiles.vimrc_url.len > 0 ||
+	   config.configs.dotfiles.vim_plug_url.len > 0 ||
+	   config.configs.dotfiles.zshrc_url.len > 0 {
+		println('Dotfiles configured, calling install_dotfiles()...')
+		configs.install_dotfiles(config.configs.dotfiles) or {
+			eprintln('\nWarning: Dotfiles failed - ${err}')
+			// Continue even if dotfiles fail
+		}
+	} else {
+		println('⚠ No dotfiles configured in config.toml, skipping dotfiles installation')
 	}
 
 	// Install custom dotfiles
+	println('\n=== [4/4] CUSTOM DOTFILES MODULE ===')
 	if config.configs.custom_dotfiles.len > 0 {
+		println('--- Installing ${config.configs.custom_dotfiles.len} custom dotfiles ---')
 		configs.install_custom_dotfiles(config.configs.custom_dotfiles) or {
-			eprintln('\nError: ${err}')
+			eprintln('\nWarning: Custom dotfiles failed - ${err}')
 			// Continue even if custom dotfiles fail
 		}
+	} else {
+		println('⚠ No custom dotfiles configured in config.toml, skipping')
 	}
 
 	println('\n🎉 All installations completed!')

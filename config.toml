@@ -1,16 +1,16 @@
 [system]
 # to default package manager
 basic_packages = [
-    "curl",
-    "flatpak",
-    "openssh-server",
-    "git",
-    "vim",
-    "htop",
-    "zsh",
-    "wget",
-    "unzip",
-    "kleopatra",
+    # "curl",
+    # "flatpak",
+    # "openssh-server",
+    # "git",
+    # "vim",
+    # "htop",
+    # "zsh",
+    # "wget",
+    # "unzip",
+    # "kleopatra",
     "most"
 ]
 
@@ -18,17 +18,17 @@ basic_packages = [
 flathub_repo = "https://flathub.org/repo/flathub.flatpakrepo"
 
 packages = [
-    "com.protonvpn.www",
-    "org.standardnotes.standardnotes",
-    "me.timschneeberger.GalaxyBudsClient",
-    "io.github.peazip.PeaZip",
-    "com.spotify.Client",
-    "org.telegram.desktop",
-    "io.github.flattool.Warehouse",
-    "com.github.tchx84.Flatseal",
-    "org.cryptomator.Cryptomator",
-    "org.torproject.torbrowser-launcher",
-    "org.onionshare.OnionShare",
+    # "com.protonvpn.www",
+    # "org.standardnotes.standardnotes",
+    # "me.timschneeberger.GalaxyBudsClient",
+    # "io.github.peazip.PeaZip",
+    # "com.spotify.Client",
+    # "org.telegram.desktop",
+    # "io.github.flattool.Warehouse",
+    # "com.github.tchx84.Flatseal",
+    # "org.cryptomator.Cryptomator",
+    # "org.torproject.torbrowser-launcher",
+    # "org.onionshare.OnionShare",
     "eu.betterbird.Betterbird"
 
 ]

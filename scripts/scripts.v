@@ -53,7 +53,8 @@ pub fn install_from_scripts(apps map[string]string) ! {
 		for app in failed {
 			println('  ✗ ${app}')
 		}
-		return error('${failed.len} script-based application(s) failed to install')
+		println('\n⚠ Warning: ${failed.len} script-based application(s) failed, but continuing...')
+		// Don't return error - let installation continue
 	}
 
 	println('\n✓ Script installation process completed')

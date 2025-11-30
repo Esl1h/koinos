@@ -99,7 +99,8 @@ pub fn install_packages(packages []string) ! {
 		for pkg in failed {
 			println('  ✗ ${pkg}')
 		}
-		return error('${failed.len} Flatpak package(s) failed to install')
+		println('\n⚠ Warning: ${failed.len} Flatpak package(s) failed, but continuing...')
+		// Don't return error - let installation continue
 	}
 
 	println('\n✓ Flatpak installation process completed')
