@@ -1,0 +1,84 @@
+[system]
+# to default package manager
+basic_packages = [
+    "curl",
+    "flatpak",
+    "openssh-server",
+    "git",
+    "vim",
+    "htop",
+    "zsh",
+    "wget",
+    "unzip",
+    "kleopatra",
+    "most"
+]
+
+[flatpak]
+flathub_repo = "https://flathub.org/repo/flathub.flatpakrepo"
+
+packages = [
+    "com.protonvpn.www",
+    "org.standardnotes.standardnotes",
+    "me.timschneeberger.GalaxyBudsClient",
+    "io.github.peazip.PeaZip",
+    "com.spotify.Client",
+    "org.telegram.desktop",
+    "io.github.flattool.Warehouse",
+    "com.github.tchx84.Flatseal",
+    "org.cryptomator.Cryptomator",
+    "org.torproject.torbrowser-launcher",
+    "org.onionshare.OnionShare",
+    "eu.betterbird.Betterbird"
+
+]
+
+[scripts]
+[scripts.apps]
+nextdns = 'sh -c "$(curl -sL https://nextdns.io/install)"'
+brave = "curl -fsS https://dl.brave.com/install.sh | sh"
+zed = "curl -f https://zed.dev/install.sh | sh"
+ohmyzsh = 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" '
+atuin = "curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh | sh"
+
+
+[configs.fonts]
+# Fontes Nerd
+hack_url = "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Hack.zip"
+jetbrains_url = "https://download.jetbrains.com/fonts/JetBrainsMono-2.242.zip"
+
+[configs.zsh]
+syntax_highlighting_repo = "https://github.com/zsh-users/zsh-syntax-highlighting.git"
+autosuggestions_repo = "https://github.com/zsh-users/zsh-autosuggestions"
+powerlevel10k_repo = "https://github.com/romkatv/powerlevel10k.git"
+
+[configs.dotfiles]
+# Configurações do sistema
+sysctl_url = "https://raw.githubusercontent.com/Esl1h/dotfiles/main/etc/sysctl.conf"
+ssh_config_url = "https://raw.githubusercontent.com/Esl1h/dotfiles/main/etc/ssh/ssh_config"
+vimrc_url = "https://raw.githubusercontent.com/Esl1h/dotfiles/main/.vimrc"
+vim_plug_url = "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+zshrc_url = "https://raw.githubusercontent.com/Esl1h/dotfiles/main/.zshrc"
+
+
+# Custom dotfiles - add as many as you need!
+# Each entry supports:
+#   - url: Source URL (with multi-mirror fallback: GitHub → GitLab → Codeberg)
+#   - destination: Where to install (use ~ for home directory)
+#   - needs_sudo: true for system files, false for user files
+
+# [[configs.custom_dotfiles]]
+# url = "https://raw.githubusercontent.com/Esl1h/dotfiles/main/.tmux.conf"
+# destination = "~/.tmux.conf"
+# needs_sudo = false
+
+# [[configs.custom_dotfiles]]
+# url = "https://raw.githubusercontent.com/Esl1h/dotfiles/main/.gitconfig"
+# destination = "~/.gitconfig"
+# needs_sudo = false
+
+# Example: system file requiring sudo (commented out)
+# [[configs.custom_dotfiles]]
+# url = "https://raw.githubusercontent.com/Esl1h/dotfiles/main/etc/hosts"
+# destination = "/etc/hosts"
+# needs_sudo = true
