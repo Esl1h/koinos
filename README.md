@@ -15,7 +15,7 @@
 
 2. **Edit the configuration** (optional):
    ```bash
-   nano config.toml
+   vim config.toml
    ```
 
 3. **Run the installer:**
